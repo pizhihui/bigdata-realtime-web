@@ -9,54 +9,79 @@ import { Selection } from '@antv/x6-plugin-selection'
 // import { Rect } from '@antv/x6/lib/shape'
 
 import CellInfo from './components/CellInfo.vue'
+import { Options as GraphOptions } from '@antv/x6/src/graph/options'
 
 const { Rect, Circle } = Shape
+
+class KafkaNode extends Shape.Rect {}
+KafkaNode.config({
+  inherit: 'rect',
+  width: 180,
+  height: 50,
+  attrs: {
+    body: {
+      stroke: '#8f8f8f',
+      strokeWidth: 1,
+      fill: '#fff',
+      rx: 6,
+      ry: 6
+    }
+  }
+})
 
 const init = () => {
   const graph = new Graph({
     container: document.getElementById('container'),
     width: 800,
     height: 600,
+    // 背景色
     background: {
-      color: '#fffbe6'
-    }
-    // autoResize: true
-  })
+      color: '#F2F7FA'
+    },
+    // 画布平移
+    panning: true,
+    // 画布缩放
+    // mousewheel: {
+    //   enabled: true,
+    //   modifiers: ['ctrl', 'meta']
+    // },
+    // 背景
+    grid: {
+      visible: true,
+      type: 'doubleMesh',
+      args: [
+        {
+          color: '#eee', // 主网格线颜色
+          thickness: 1 // 主网格线宽度
+        },
+        {
+          color: '#ddd', // 次网格线颜色
+          thickness: 1, // 次网格线宽度
+          factor: 4 // 主次网格线间隔
+        }
+      ]
+    },
+    // 自动
+    autoResize: true
+  } as GraphOptions)
 
   graph.use(
     new Selection({
       enabled: true,
-      multiple: true,
-      rubberband: true,
+      multiple: false,
+      rubberband: false,
       movable: true,
       showNodeSelectionBox: true
     })
   )
 
-  Graph.registerNode(
-    'kafka-node',
-    {
-      inherit: 'rect',
-      width: 100,
-      height: 40,
-      attrs: {
-        body: {
-          stroke: '#8f8f8f',
-          strokeWidth: 1,
-          fill: '#fff',
-          rx: 6,
-          ry: 6
-        }
-      }
-    },
-    true
-  )
+  Graph.registerNode('kafka-node', KafkaNode, true)
 
   const stencil = new Stencil({
     target: graph,
     title: '====算子=====',
     collapsable: true,
-    stencilGraphWidth: 200, //模板画布宽度
+    stencilGraphWidth: 300, //模板画布宽度
     stencilGraphHeight: 180, //模板画布高度
     groups: [
       {
@@ -76,26 +101,27 @@ const init = () => {
     width: 80,
     height: 40
   })
-  const kafkaNode = new Rect({
-    shape: 'kafka-node',
-    width: 80,
-    height: 40,
-    label: 'kafka'
-  })
   const c1 = new Circle({
     width: 60,
     height: 60,
     attrs: {
-      circle: { fill: '#4B4A67', 'stroke-width': 6, stroke: '#FE854F' },
+      circle: { fill: '#4B4A67', 'stroke-width': 2, stroke: '#FE854F' },
       text: { text: 'ellipse', fill: 'white' }
     }
+  })
+
+  const kfkN2 = graph.createNode({
+    shape: 'kafka-node',
+    width: 180,
+    height: 50,
+    label: 'kafka'
   })
 
   const stencilContainer = document.getElementById('left-dragger-nav')
   stencilContainer.appendChild(stencil.container)
   stencil.load([rect1, c1], '输入')
-  stencil.load([kafkaNode], '处理')
-  stencil.load([c1], '输出')
+  stencil.load([kfkN2], '处理')
+  stencil.load([kfkN2], '输出')
 
   graph.on('cell:selected', ({ cell }) => {
     console.log('cell.selected....', cell)
@@ -143,52 +169,35 @@ const init = () => {
     cell.removeTools()
   })
 }
-
 const curCell = ref({})
-
+curCell.value = ''
 onMounted(init)
 </script>
 
 <template>
   <div class="task">
-    <CellInfo :cur-cell="curCell"></CellInfo>
     <div class="left-dragger-nav" id="left-dragger-nav"></div>
-    <div id="container"></div>
+    <div class="center-container" id="container"></div>
+    <div class="right-cell-info">
+      <CellInfo class="right-cell-info" :cur-cell="curCell"></CellInfo>
+    </div>
   </div>
 </template>
 
 <style lang="less" scoped>
 .task {
   display: flex;
+  padding-left: 5px;
   .left-dragger-nav {
     position: relative;
-    width: 200px;
+    width: 300px;
+  }
+  .center-container {
+    width: 100%;
+    height: 100%;
+  }
+  .right-cell-info {
+    width: 100px;
   }
 }
-//.Graph {
-//  position: relative;
-//  border: 1px solid red;
-//  width: 800px;
-//}
-//.graphBtn {
-//  position: absolute;
-//  right: 0;
-//  bottom: 0;
-//}
-//.task {
-//  display: flex;
-//  #left {
-//    position: relative;
-//    width: 200px;
-//    //height: 600px;
-//    background-color: blue;
-//  }
-//  #container {
-//    flex: 1;
-//    //width: 1200px;
-//    //height: 600px;
-//    //background-color: lightgray;
-//    transform: translateY(500px);
-//  }
-//}
 </style>
