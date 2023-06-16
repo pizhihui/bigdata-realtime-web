@@ -143,6 +143,9 @@ const init = () => {
         {
           name: 'boundary',
           args: {
+            padding: 5,
+            // 是否使用几何计算的方式来计算元素包围盒，开启后会有性能上的提升，如果出现计算准度问题，请将它设置为 false
+            useCellGeometry: true,
             attrs: {
               fill: '#7c68fc',
               stroke: '#333',
