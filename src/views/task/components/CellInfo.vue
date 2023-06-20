@@ -29,6 +29,12 @@ const closeEditForm = () => {
   //   graph.unselect(curCell)
   // }
 }
+const getCurCellInfo = () => {
+  console.log('获取当强cell的信息.....', curCell?.value.prop())
+}
+const updateLabelInfo = () => {
+  curCell?.value.attr('label/text', 'kafka-topic-01-....')
+}
 </script>
 
 <template>
@@ -39,6 +45,8 @@ const closeEditForm = () => {
       <!--      <i class="anticon-close" @click="closeEditForm"></i>-->
       <!--      <close-outlined class="close-icon" @click="closeEditForm" />-->
       <a-button @click="closeEditForm">关闭</a-button>
+      <a-button @click="updateLabelInfo">修改标题信息</a-button>
+      <a-button @click="getCurCellInfo">获取信息</a-button>
     </div>
     <h2>CellInfo信息</h2>
   </div>

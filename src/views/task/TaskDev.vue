@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { getCurrentInstance, onMounted, provide, ref } from "vue";
+import { onMounted, provide, ref } from 'vue'
 
 import { Graph, Shape } from '@antv/x6'
-// import { Dnd } from '@antv/x6-plugin-dnd'
+import { Dnd } from '@antv/x6-plugin-dnd'
 import { Stencil } from '@antv/x6-plugin-stencil'
 import { Selection } from '@antv/x6-plugin-selection'
 
@@ -11,97 +11,40 @@ import { Selection } from '@antv/x6-plugin-selection'
 import CellInfo from './components/CellInfo.vue'
 import { Options as GraphOptions } from '@antv/x6/src/graph/options'
 
+import KafkaNode from '@/views/task/kafkaNode'
+import ClickHouseNode from '@/views/task/ClickHouseNode'
+
 const { Rect, Circle } = Shape
 
-class KafkaNode extends Shape.Rect {}
-KafkaNode.config({
-  inherit: 'rect',
-  width: 180,
-  height: 50,
-  attrs: {
-    body: {
-      stroke: '#8f8f8f',
-      strokeWidth: 1,
-      fill: '#fff',
-      rx: 6,
-      ry: 6
-    }
-  },
-  ports: {
-    items: [
-      { group: 'in', id: 'p_top' },
-      { group: 'right-out', id: 'p_right' },
-      { group: 'bottom-out', id: 'p_bottom' },
-      { group: 'left-out', id: 'p_left' }
-    ],
-    groups: {
-      in: {
-        position: 'top',
-        zIndex: 1,
-        attrs: {
-          circle: {
-            r: 4,
-            magnet: true,
-            stroke: '#31d0c6',
-            strokeWidth: 2,
-            fill: '#fff',
-            style: {
-              visibility: 'hidden'
-            }
-          }
-        }
-      },
-      'bottom-out': {
-        position: 'bottom',
-        zIndex: 1,
-        attrs: {
-          circle: {
-            r: 4,
-            magnet: true,
-            stroke: '#31d0c6',
-            strokeWidth: 2,
-            fill: '#fff',
-            style: {
-              visibility: 'hidden'
-            }
-          }
-        }
-      },
-      'right-out': {
-        position: 'right',
-        zIndex: 20,
-        attrs: {
-          circle: {
-            r: 4,
-            magnet: true,
-            stroke: '#31d0c6',
-            strokeWidth: 2,
-            fill: '#fff',
-            style: {
-              visibility: 'hidden'
-            }
-          }
-        }
-      },
-      'left-out': {
-        position: 'left',
-        zIndex: 20,
-        attrs: {
-          circle: {
-            r: 4,
-            magnet: true,
-            stroke: '#31d0c6',
-            strokeWidth: 2,
-            fill: '#fff',
-            style: {
-              visibility: 'hidden'
-            }
-          }
-        }
-      }
-    }
-  }
-})
+const dragSource = () => {
+  // console.log('dra.source....', e)
+}
+
+const dragMouseDown = (e) => {
+  const target = e.currentTarget
+  const type = target.getAttribute('data-type')
+  console.log('mouse.down.....', type)
+  const kNode = graph.value.createNode({
+    shape: type,
+    width: 180,
+    height: 50,
+    label: 'kafka'
+  })
+  dnd.value.start(kNode, e)
+}
+
+const drop = (e) => {
+  console.log('drop.....', e)
+  const ev = e as DragEvent
+  graph.value.addNode({
+    shape: 'kafka-node',
+    width: 90,
+    height: 40,
+    label: 'kafka',
+    x: ev.offsetX,
+    y: ev.offsetY
+  })
+}
 
 const changePortsVisible = (node, visible) => {
   const ports = document.querySelectorAll(
@@ -113,6 +56,7 @@ const changePortsVisible = (node, visible) => {
 }
 
 const graph = ref({})
+const dnd = ref({})
 
 const init = () => {
   graph.value = new Graph({
@@ -160,7 +104,12 @@ const init = () => {
     })
   )
 
+  dnd.value = new Dnd({
+    target: graph.value
+  })
+
   Graph.registerNode('kafka-node', KafkaNode, true)
+  Graph.registerNode('clickhouse-node', ClickHouseNode, true)
 
   const stencil = new Stencil({
     target: graph.value,
@@ -202,16 +151,16 @@ const init = () => {
 
   const kfkN2 = graph.value.createNode({
     shape: 'kafka-node',
-    width: 90,
-    height: 40,
+    width: 180,
+    height: 50,
     label: 'kafka'
   })
 
-  const stencilContainer = document.getElementById('left-dragger-nav')
-  stencilContainer.appendChild(stencil.container)
-  stencil.load([rect1, c1], '输入')
-  stencil.load([kfkN2], '处理')
-  stencil.load([kfkN2], '输出')
+  // const stencilContainer = document.getElementById('left-dragger-nav')
+  // stencilContainer.appendChild(stencil.container)
+  // stencil.load([rect1, c1], '输入')
+  // stencil.load([kfkN2], '处理')
+  // stencil.load([kfkN2], '输出')
 
   graph.value.on('cell:selected', ({ cell }) => {
     console.log('cell.selected....', cell)
@@ -303,7 +252,45 @@ provide('graph', graph)
 
 <template>
   <div class="task">
-    <div class="left-dragger-nav" id="left-dragger-nav"></div>
+    <!-- <div class="left-dragger-nav" id="left-dragger-nav"></div> -->
+    <div class="left-dragger-nav">
+      <!-- 目标 -->
+      <div class="left-dragger-row">
+        <p class="left-dragger-title">数据源</p>
+        <div class="left-dragger-body">
+          <div
+            class="left-dragger-item kafka-node"
+            @mousedown="dragMouseDown"
+            data-type="kafka-node"
+          ></div>
+        </div>
+      </div>
+
+      <!-- 目标 -->
+      <div class="left-dragger-row">
+        <p class="left-dragger-title">算子</p>
+        <div class="left-dragger-body">
+          <div
+            class="left-dragger-item kafka-node"
+            @mousedown="dragMouseDown"
+            data-type="sink-hbase"
+          ></div>
+        </div>
+      </div>
+
+      <!-- 目标 -->
+      <div class="left-dragger-row">
+        <p class="left-dragger-title">存储</p>
+        <div class="left-dragger-body">
+          <div
+            class="left-dragger-item clickhouse-node"
+            @mousedown="dragMouseDown"
+            data-type="clickhouse-node"
+          ></div>
+        </div>
+      </div>
+    </div>
+    <!--<div class="center-container" id="container" @drop="drop($event)" @dragover.prevent></div>-->
     <div class="center-container" id="container"></div>
     <CellInfo class="right-cell-info" :cur-cell="curCell"></CellInfo>
     <!--    <div class="right-cell-info">-->
@@ -327,15 +314,50 @@ provide('graph', graph)
   display: flex;
   width: 100%;
   height: 100vh;
-  box-sizing: border-box;
-  padding: 5px;
+  // box-sizing: border-box;
+  padding: 0 5px;
   .left-dragger-nav {
     border: 1px solid slategray;
-    position: relative;
+    //position: relative;
     width: 300px;
     height: 100%;
+    .left-dragger-row {
+      .left-dragger-title {
+        text-align: center;
+        font-size: 16px;
+        color: #333;
+        padding: 15px 10px;
+        border-bottom: 1px solid #ccc;
+        font-weight: bold;
+      }
+      .left-dragger-body {
+        padding: 0 23px;
+        display: flex;
+        .kafka-node {
+          background: url('@/assets/kafka-logo.png') no-repeat center / 60px 30px;
+        }
+        .clickhouse-node {
+          background: url('@/assets/ch_logo_docs.svg') no-repeat center / 90px 50px;
+        }
+        .left-dragger-item {
+          display: inline-block;
+          border: 1px solid #8f8f8f;
+          background-color: #f2f2f2;
+          border-radius: 3px;
+          color: #333;
+          width: 92px;
+          height: 40px;
+          line-height: 40px;
+          font-size: 13px;
+          text-align: center;
+          cursor: pointer;
+          margin-right: 10px;
+        }
+      }
+    }
   }
   .center-container {
+    // box-sizing: border-box;
     margin-left: 2px;
     border: 1px solid slategray;
     width: 100%;
