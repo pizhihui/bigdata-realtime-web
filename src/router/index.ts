@@ -9,19 +9,23 @@ const router = createRouter({
     },
     {
       path: '/:pathMatch(.*)',
-      component: () => import('../views/not-found/NotFound.vue')
+      component: () => import('@/views/not-found/NotFound.vue')
+    },
+    {
+      path: '/test',
+      component: () => import('@/views/test/Test')
     },
     {
       path: '/login',
-      component: () => import('../views/login/Login.vue')
+      component: () => import('@/views/login/Login.vue')
     },
     {
       path: '/main',
-      component: () => import('../views/main/Main.vue')
+      component: () => import('@/views/main/Main.vue')
     },
     {
       path: '/task',
-      component: () => import('../views/task/TaskDev.vue')
+      component: () => import('@/views/task/TaskDev.vue')
     }
   ]
 })
