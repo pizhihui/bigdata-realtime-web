@@ -15,8 +15,12 @@ import pinia from '@/store'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 
+// naive
+import naive from 'naive-ui'
+
 const app = createApp(App)
 app.use(router)
 app.use(pinia)
+app.use(naive)
 app.use(Antd)
 app.mount('#app')
